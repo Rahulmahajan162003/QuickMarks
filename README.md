@@ -12,156 +12,62 @@ Users can securely sign in with Google, manage private bookmarks, and see realti
 
 ---
 
-## 📌 Project Overview
+## Features
 
-QuickMarks is a full-stack bookmark manager designed with strong security and modern architecture.
+- **Authentication**: secure Google OAuth via Supabase Auth.
+- **Security**: Row Level Security (RLS) ensures users can only access their own data.
+- **Realtime**: Instant updates across devices using Supabase Realtime.
+- **Modern UI**: Clean, responsive interface built with Tailwind CSS.
 
-The application demonstrates:
+## Tech Stack
 
-- Secure Google OAuth authentication
-- Row Level Security (RLS) enforced at database level
-- Realtime UI updates
-- Server Component architecture
-- Production deployment using Vercel
+- **Framework**: Next.js 14 (App Router)
+- **Database & Auth**: Supabase
+- **Styling**: Tailwind CSS
+- **Language**: TypeScript
 
-Each user's data is strictly isolated using Supabase RLS policies.
+## Getting Started
 
----
+1.  **Clone the repository** (if applicable) and navigate to the project folder.
 
-## ✨ Features
+2.  **Install dependencies**:
+    ```bash
+    npm install
+    ```
 
-- 🔐 **Google OAuth Authentication** via Supabase Auth
-- 🛡️ **Row Level Security (RLS)** ensuring private user data
-- ⚡ **Realtime Updates** across tabs and sessions
-- 🎨 **Modern Responsive UI** built with Tailwind CSS
-- 🚀 **Production Deployment** using Vercel
+3.  **Environment Setup**:
+    Create a `.env.local` file in the root directory and add your Supabase credentials:
+    ```env
+    NEXT_PUBLIC_SUPABASE_URL=your-project-url
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+    ```
 
----
+4.  **Database Setup**:
+    Run the SQL commands in `schema.sql` in your Supabase SQL Editor to create the `bookmarks` table and enable RLS policies.
+    
+    *Critical Security Note*: The RLS policies enforce `auth.uid() = user_id`, ensuring strict data isolation.
 
-## 🛠️ Tech Stack
+5.  **Run the application**:
+    ```bash
+    npm run dev
+    ```
+    Open [http://localhost:3000](http://localhost:3000).
 
-- **Framework:** Next.js 14 (App Router)
-- **Database & Auth:** Supabase
-- **Styling:** Tailwind CSS
-- **Language:** TypeScript
-- **Deployment:** Vercel
+## Architecture & Implementation
 
----
+### Authentication
+Implemented using `@supabase/ssr` for secure server-side session management.
+- **Login**: `/login/page.tsx` initiates OAuth flow.
+- **Callback**: `/auth/callback/route.ts` exchanges auth code for session cookies.
+- **Middleware**: `middleware.ts` protects `/dashboard` and refreshes sessions.
 
-## ⚙️ Getting Started (Local Setup)
+### Security (RLS)
+Row Level Security is enabled on the `bookmarks` table.
+- **Policies**: `SELECT`, `INSERT`, `DELETE` are restricted to rows where `user_id` matches the authenticated user's ID (`auth.uid()`).
+- **Server-Side Fetching**: Data fetching in `/dashboard/page.tsx` also explicitly filters by `user_id` as a redundant safety measure.
 
-### 1️⃣ Install Dependencies
-
-```bash
-npm install
-
-2️⃣ Environment Variables
-Create a .env.local file in root directory:
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-
-3️⃣ Database Setup
-Run SQL commands from schema.sql inside Supabase SQL Editor.
-
-🔒 Security Model
-Row Level Security (RLS) is enabled on the bookmarks table.
-Policies enforce:
-auth.uid() = user_id
-
-4️⃣ Run the Application
-npm run dev
-Open:
-http://localhost:3000
-
-🏗️ Architecture & Implementation
-🔐 Authentication Flow
-
-Authentication is implemented using @supabase/ssr for secure server-side session management.
-Flow:
-
-User clicks Sign in with Google
-Supabase OAuth starts
-Google redirects to:
-/auth/callback
-
-Server exchanges auth code for session cookies
-
-Middleware validates session before accessing dashboard
-
-Key Files:
-
-/login/page.tsx
-/auth/callback/route.ts
-/middleware.ts
-
-🛡️ Security (Row Level Security)
-Row Level Security protects all bookmark data.
-Policies restrict:
-
-SELECT
-
-INSERT
-
-DELETE
-
-to rows where:
-user_id === auth.uid()
-Server-side fetching in:
-/dashboard/page.tsx
-
-⚡ Realtime Updates
-Realtime functionality is implemented in:
-/hooks/useBookmarksRealtime.ts
-
-Behavior:
-
-Subscribes to postgres_changes on the bookmarks table.
-Listens for:
-INSERT
-UPDATE
-DELETE
-
-Calls:
-router.refresh()
-Result:
-No manual refresh required
-Server Components always stay in sync
-
-🔄 Realtime Architecture (Concept)
-User Action
-   ↓
-Supabase Database Change
-   ↓
-Realtime Subscription Trigger
-   ↓
-router.refresh()
-   ↓
-Server Component Refetch
-   ↓
-UI Updates Instantly
-
-🧠 Design Decisions
-Used Server Components instead of client fetching for better security.
-Added middleware session validation to protect routes globally.
-Implemented RLS + server filtering for strict access control.
-Used router.refresh() instead of local state mutations to keep server as source of truth.
-
-🚀 Deployment
-Deployed on Vercel with environment variables:
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-Supabase OAuth Redirect URLs configured:
-https://quick-marks.vercel.app/auth/callback
-http://localhost:3000/auth/callback
-
-📁 Folder Structure (Important Parts)
-app/
- ├── login/
- ├── dashboard/
- ├── auth/callback/
-components/
-hooks/
-lib/supabase/
-middleware.ts
+### Realtime Updates
+Realtime functionality is implemented in the custom hook `/hooks/useBookmarksRealtime.ts`.
+- It subscribes to `postgres_changes` on the `bookmarks` table.
+- On any `INSERT`, `UPDATE`, or `DELETE` event, it triggers `router.refresh()` to re-fetch data in Server Components, ensuring the UI is always in sync without manual reloads.
 
