@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useBookmarksRealtime } from '@/hooks/useBookmarksRealtime'
+import { useState } from 'react'
 
 type Bookmark = {
     id: string
@@ -12,7 +13,7 @@ type Bookmark = {
 
 export default function BookmarkList({ bookmarks }: { bookmarks: Bookmark[] }) {
     useBookmarksRealtime()
-    const supabase = createClient()
+    const [supabase] = useState(() => createClient())
 
     const handleDelete = async (id: string) => {
         const { error } = await supabase.from('bookmarks').delete().eq('id', id)
