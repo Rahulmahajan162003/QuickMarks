@@ -1,7 +1,7 @@
 'use client'
 
 import { createClient } from '@/lib/supabase/client'
-import { useState } from 'react'
+import { useState, startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function BookmarkForm() {
@@ -28,7 +28,9 @@ export default function BookmarkForm() {
             if (!error) {
                 setTitle('')
                 setUrl('')
-                router.refresh()
+                startTransition(() => {
+                    router.refresh()
+                })
                 router.push('/dashboard')
             } else {
                 console.error('Error adding bookmark:', error)
