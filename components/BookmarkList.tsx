@@ -2,7 +2,7 @@
 
 import { createClient } from '@/lib/supabase/client'
 import { useBookmarksRealtime } from '@/hooks/useBookmarksRealtime'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 type Bookmark = {
     id: string
@@ -14,15 +14,40 @@ type Bookmark = {
 export default function BookmarkList({ bookmarks }: { bookmarks: Bookmark[] }) {
     useBookmarksRealtime()
     const [supabase] = useState(() => createClient())
+    const [localBookmarks, setLocalBookmarks] = useState<Bookmark[]>(bookmarks)
+
+    useEffect(() => {
+        setLocalBookmarks(bookmarks)
+    }, [bookmarks])
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            setLocalBookmarks(prev => [
+                {
+                    id: crypto.randomUUID(),
+                    title: e.detail.title,
+                    url: e.detail.url,
+                    created_at: new Date().toISOString()
+                },
+                ...prev
+            ])
+        }
+        window.addEventListener('bookmark-added', handler)
+        return () => window.removeEventListener('bookmark-added', handler)
+    }, [])
 
     const handleDelete = async (id: string) => {
+        // Optimistically remove from UI
+        setLocalBookmarks(prev => prev.filter(b => b.id !== id))
+
         const { error } = await supabase.from('bookmarks').delete().eq('id', id)
         if (error) {
             console.error('Error deleting bookmark:', error)
+            // Revert on error? Let's keep it simple for now as requested.
         }
     }
 
-    if (bookmarks.length === 0) {
+    if (localBookmarks.length === 0) {
         return (
             <div className="text-center text-gray-500 py-10">
                 No bookmarks yet. Add one to get started!
@@ -32,7 +57,7 @@ export default function BookmarkList({ bookmarks }: { bookmarks: Bookmark[] }) {
 
     return (
         <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-            {bookmarks.map((bookmark) => (
+            {localBookmarks.map((bookmark) => (
                 <div key={bookmark.id} className="flex flex-col justify-between rounded-lg bg-white p-6 shadow-md transition-shadow hover:shadow-lg">
                     <div>
                         <h4 className="mb-2 text-lg font-semibold text-gray-900 truncate" title={bookmark.title}>

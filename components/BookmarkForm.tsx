@@ -26,6 +26,11 @@ export default function BookmarkForm() {
                 user_id: user.id
             })
             if (!error) {
+                // Dispatch event for optimistic UI update
+                window.dispatchEvent(new CustomEvent('bookmark-added', {
+                    detail: { title, url }
+                }))
+
                 setTitle('')
                 setUrl('')
                 startTransition(() => {
