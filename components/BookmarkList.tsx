@@ -16,6 +16,19 @@ interface BookmarkAddedEvent {
     url: string
 }
 
+export type BookmarkRealtimePayload = {
+    new: {
+        id: string
+        title: string
+        url: string
+        user_id: string
+        created_at: string
+    } | null
+    old: {
+        id: string
+    } | null
+}
+
 export default function BookmarkList({ bookmarks }: { bookmarks: Bookmark[] }) {
     useBookmarksRealtime()
     const [supabase] = useState(() => createClient())
