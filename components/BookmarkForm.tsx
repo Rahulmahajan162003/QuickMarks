@@ -29,6 +29,7 @@ export default function BookmarkForm() {
                 setTitle('')
                 setUrl('')
                 router.refresh()
+                router.push('/dashboard')
             } else {
                 console.error('Error adding bookmark:', error)
             }
