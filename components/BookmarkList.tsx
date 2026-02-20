@@ -11,6 +11,11 @@ type Bookmark = {
     created_at: string
 }
 
+interface BookmarkAddedEvent {
+    title: string
+    url: string
+}
+
 export default function BookmarkList({ bookmarks }: { bookmarks: Bookmark[] }) {
     useBookmarksRealtime()
     const [supabase] = useState(() => createClient())
@@ -21,12 +26,13 @@ export default function BookmarkList({ bookmarks }: { bookmarks: Bookmark[] }) {
     }, [bookmarks])
 
     useEffect(() => {
-        const handler = (e: any) => {
+        const handler = (e: Event) => {
+            const customEvent = e as CustomEvent<BookmarkAddedEvent>
             setLocalBookmarks(prev => [
                 {
                     id: crypto.randomUUID(),
-                    title: e.detail.title,
-                    url: e.detail.url,
+                    title: customEvent.detail.title,
+                    url: customEvent.detail.url,
                     created_at: new Date().toISOString()
                 },
                 ...prev
