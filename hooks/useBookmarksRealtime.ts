@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import type { BookmarkRealtimePayload } from '@/components/BookmarkList'
 
 export function useBookmarksRealtime() {
     const [supabase] = useState(() => createClient())
@@ -19,7 +18,7 @@ export function useBookmarksRealtime() {
                     schema: 'public',
                     table: 'bookmarks',
                 },
-                (payload: BookmarkRealtimePayload) => {
+                (payload) => {
                     router.refresh()
                 }
             )
